@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "paciente": "Juan Perez",
+    "medicamentos": [
+      {
+        "nombre": "Paracetamol",
+        "cantidad": 2
+      },
+      {
+        "nombre": "Ibuprofeno",
+        "cantidad": 1
+      }
+    ]
+  }
+]

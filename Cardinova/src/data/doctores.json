@@ -1,0 +1,14 @@
+[
+  {
+    "nombre": "Dr. Carlos Rodríguez",
+    "correo": "carlos.rodriguez@cardinova.com",
+    "password": "doc_carlos123",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dra. María Gómez",
+    "correo": "maria.gomez@cardinova.com",
+    "password": "doc_maria123",
+    "rol": "doctor"
+  }
+]
