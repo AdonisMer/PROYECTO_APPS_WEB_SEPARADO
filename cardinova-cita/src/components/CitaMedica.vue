@@ -5,20 +5,20 @@
     <div v-if="correoSeleccionado" class="paneles-medicos">
       <InformacionPaciente :paciente="pacienteActual" />
       <DiagnosticoReceta
-      :sintomas="sintomasActivos"
-      :diagnostico="diagnosticoActual"
-      :medicamentos="medicamentosRecetados"
-      :listaSintomas="listaSintomas"
-      :listaMedicamentos="listaMedicamentos"
-      @update:diagnostico="actualizarDiagnostico"
-      @agregarSintoma="agregarSintoma"
-      @eliminarSintoma="eliminarSintoma"
-      @agregarMedicamento="agregarMedicamento"
-      @eliminarMedicamento="eliminarMedicamento"
-      @buscarFarmacias="buscarFarmacias"
-      @enviarReceta="enviarReceta"
-      @exportarPDF="exportarPDF"
-    />
+        :sintomas="sintomasActivos"
+        :diagnostico="diagnosticoActual"
+        :medicamentos="medicamentosRecetados"
+        :listaSintomas="listaSintomas"
+        :listaMedicamentos="listaMedicamentos"
+        @update:diagnostico="actualizarDiagnostico"
+        @agregarSintoma="agregarSintoma"
+        @eliminarSintoma="eliminarSintoma"
+        @agregarMedicamento="agregarMedicamento"
+        @eliminarMedicamento="eliminarMedicamento"
+        @buscarFarmacias="buscarFarmacias"
+        @enviarReceta="enviarReceta"
+        @exportarPDF="exportarPDF"
+      />
     </div>
     <div v-else class="mensaje-sin-seleccion">
       <i class="fa-solid fa-user-plus"></i>
@@ -55,7 +55,7 @@ const { buscarFarmacias: buscarFarmaciasService } = useFarmacias();
 const correoSeleccionado = ref('');
 const diagnosticoActual = ref('');
 const sintomasActivos = ref<string[]>([]);
-const medicamentosRecetados = ref<string[]>([]);
+const medicamentosRecetados = ref<{ nombre: string; dosis: string; frecuencia: string }[]>([]);
 const listaSintomas = ref<string[]>([]);
 const listaMedicamentos = ref<string[]>([]);
 const modalVisible = ref(false);
@@ -71,16 +71,17 @@ const guardarCambiosPaciente = () => {
   actualizarPaciente(correoSeleccionado.value, {
     diagnostico: diagnosticoActual.value,
     sintomasActivos: [...sintomasActivos.value],
-    medicamentos: medicamentosRecetados.value.join(' • ')
+    medicamentos: medicamentosRecetados.value
+      .map(m => `${m.nombre} (${m.dosis} – ${m.frecuencia})`)
+      .join(' • ')
   });
 };
 
+// ========== DIAGNÓSTICO ==========
 const actualizarDiagnostico = (nuevoDiagnostico: string) => {
   diagnosticoActual.value = nuevoDiagnostico;
-  guardarCambiosPaciente(); // <--- Esto guarda en localStorage
+  guardarCambiosPaciente();
 };
-
-
 
 // ========== SÍNTOMAS ==========
 const agregarSintoma = (sintoma: string) => {
@@ -100,9 +101,12 @@ const eliminarSintoma = (index: number) => {
 };
 
 // ========== MEDICAMENTOS ==========
-const agregarMedicamento = (medicamento: string) => {
-  if (medicamentosRecetados.value.includes(medicamento)) {
-    alert('Este medicamento ya ha sido agregado.');
+const agregarMedicamento = (medicamento: { nombre: string; dosis: string; frecuencia: string }) => {
+  const existe = medicamentosRecetados.value.some(
+    m => m.nombre === medicamento.nombre && m.dosis === medicamento.dosis
+  );
+  if (existe) {
+    alert('Este medicamento con esta dosis ya está agregado.');
     return;
   }
   medicamentosRecetados.value.push(medicamento);
@@ -111,19 +115,19 @@ const agregarMedicamento = (medicamento: string) => {
 
 const eliminarMedicamento = (index: number) => {
   const medicamento = medicamentosRecetados.value[index];
-  if (confirm(`¿Eliminar medicamento "${medicamento}"?`)) {
+  if (confirm(`¿Eliminar medicamento "${medicamento.nombre}"?`)) {
     medicamentosRecetados.value.splice(index, 1);
     guardarCambiosPaciente();
-    if (modalVisible.value && medicamentoBuscado.value === medicamento) {
+    if (modalVisible.value && medicamentoBuscado.value === medicamento.nombre) {
       modalVisible.value = false;
     }
   }
 };
 
 // ========== FARMACIAS ==========
-const buscarFarmacias = (medicamento: string) => {
-  medicamentoBuscado.value = medicamento;
-  farmaciasEncontradas.value = buscarFarmaciasService(medicamento);
+const buscarFarmacias = (nombreMedicamento: string) => {
+  medicamentoBuscado.value = nombreMedicamento;
+  farmaciasEncontradas.value = buscarFarmaciasService(nombreMedicamento);
   modalVisible.value = true;
 };
 
@@ -183,7 +187,7 @@ const exportarPDF = () => {
         </div>
         <div class="seccion">
           <h2>💊 Medicamentos</h2>
-          <ul>${medicamentosRecetados.value.map(m => `<li>${m}</li>`).join('') || '<li>No recetados</li>'}</ul>
+          <ul>${medicamentosRecetados.value.map(m => `<li>${m.nombre} ${m.dosis} – ${m.frecuencia}</li>`).join('') || '<li>No recetados</li>'}</ul>
         </div>
         <div class="footer">
           <p>Cardinova - Sistema de Gestión Médica</p>
@@ -215,10 +219,33 @@ const cerrarSesion = () => {
 // ========== WATCHERS ==========
 watch(correoSeleccionado, (nuevo) => {
   const p = obtenerPaciente(nuevo);
-  if (p) {
-    diagnosticoActual.value = p.diagnostico || '';
-    sintomasActivos.value = p.sintomasActivos || [];
-    medicamentosRecetados.value = p.medicamentos ? p.medicamentos.split('•').map((m: string) => m.trim()).filter(Boolean) : [];
+  if (!p) {
+    medicamentosRecetados.value = [];
+    return;
+  }
+  
+  diagnosticoActual.value = p.diagnostico || '';
+  sintomasActivos.value = p.sintomasActivos || [];
+  
+  // Intentar cargar medicamentos
+  try {
+    const medicamentosStr = p.medicamentos || '';
+    if (typeof medicamentosStr === 'string' && medicamentosStr.trim()) {
+      const items = medicamentosStr.split('•').filter(s => s.trim());
+      medicamentosRecetados.value = items.map(item => {
+        const trimmed = item.trim();
+        const match = trimmed.match(/^(.+?)\s*\((.+?)\s*–\s*(.+?)\)$/);
+        if (match) {
+          return { nombre: match[1].trim(), dosis: match[2].trim(), frecuencia: match[3].trim() };
+        }
+        return { nombre: trimmed, dosis: '', frecuencia: '' };
+      }).filter(m => m.nombre && m.nombre.trim());
+    } else {
+      medicamentosRecetados.value = [];
+    }
+  } catch (error) {
+    console.error('Error cargando medicamentos:', error);
+    medicamentosRecetados.value = [];
   }
 });
 

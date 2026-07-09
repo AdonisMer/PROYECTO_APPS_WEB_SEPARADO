@@ -24,19 +24,12 @@
     <div class="grupo-campo">
       <div class="encabezado-campo">
         <label>Diagnóstico:</label>
-        <div>
-          <button v-if="!modoEdicion" @click="habilitarEdicion" class="btn-accion-pequeno">Editar</button>
-          <button v-else @click="guardarDiagnosticoManual" class="btn-accion-pequeno" style="color: #22c55e;">
-            <i class="fa-solid fa-check"></i> Guardar
-          </button>
-        </div>
+        <button v-if="!modoEdicion" @click="habilitarEdicion" class="btn-accion-pequeno">Editar</button>
+        <button v-else @click="guardarDiagnosticoManual" class="btn-accion-pequeno" style="color: #22c55e;">
+          <i class="fa-solid fa-check"></i> Guardar
+        </button>
       </div>
-      <div
-        ref="cajaDiagnostico"
-        class="campo area"
-        :contenteditable="modoEdicion"
-        @blur="guardarDiagnostico"
-      >
+      <div ref="cajaDiagnostico" class="campo area" :contenteditable="modoEdicion" @blur="guardarDiagnostico">
         {{ diagnostico }}
       </div>
     </div>
@@ -44,17 +37,35 @@
     <!-- Medicamentos -->
     <div class="grupo-campo">
       <label>Medicamentos Recetados:</label>
-      <div class="controles-agregar">
-        <select v-model="medicamentoTemporal" class="campo">
-          <option value="">Seleccione un medicamento...</option>
-          <option v-for="m in listaMedicamentos" :key="m" :value="m">{{ m }}</option>
+      <div class="controles-agregar-med">
+        <select v-model="medicamentoSeleccionado" class="campo" style="flex: 2;">
+          <option value="">Seleccione medicamento...</option>
+          <option v-for="opcion in medicamentosOpciones" :key="opcion.valor" :value="opcion.valor">
+            {{ opcion.nombre }}
+          </option>
+        </select>
+        <input 
+          v-model.number="medicamentoDosisNumero" 
+          class="campo" 
+          placeholder="Dosis (ej: 50)" 
+          style="flex: 1;" 
+          type="number" 
+          min="0"
+        />
+        <select v-model="medicamentoFrecuencia" class="campo" style="flex: 1.5;">
+          <option value="">Frecuencia</option>
+          <option value="cada 8h">cada 8h</option>
+          <option value="cada 12h">cada 12h</option>
+          <option value="diario">diario</option>
+          <option value="semanal">semanal</option>
+          <option value="según necesite">según necesite</option>
         </select>
         <button @click="agregarMedicamento" class="btn-add">+</button>
       </div>
       <div class="contenedor-etiquetas">
-        <div v-for="(med, index) in medicamentos" :key="index" class="etiqueta-item" @click="buscar(med)" style="cursor: pointer;">
-          <span>{{ med }}</span>
-          <button @click.stop="eliminarMedicamento(index)" class="btn-eliminar-etiqueta">x</button>
+        <div v-for="(med, index) in medicamentos" :key="index" class="etiqueta-item" @click="buscar(med.nombre)" style="cursor: pointer;">
+          <span>{{ med.nombre }} {{ med.dosis }} – {{ med.frecuencia }}</span>
+          <button @click.stop="emit('eliminarMedicamento', index)" class="btn-eliminar-etiqueta">x</button>
         </div>
       </div>
     </div>
@@ -71,43 +82,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, computed } from 'vue';
 
+// ========== PROPS ==========
 const props = defineProps<{
   sintomas: string[];
   diagnostico: string;
-  medicamentos: string[];
+  medicamentos: { nombre: string; dosis: string; frecuencia: string }[];
   listaSintomas: string[];
   listaMedicamentos: string[];
 }>();
 
+// ========== EMITS ==========
 const emit = defineEmits<{
   (e: 'update:diagnostico', value: string): void;
   (e: 'agregarSintoma', value: string): void;
   (e: 'eliminarSintoma', index: number): void;
-  (e: 'agregarMedicamento', value: string): void;
+  (e: 'agregarMedicamento', medicamento: { nombre: string; dosis: string; frecuencia: string }): void;
   (e: 'eliminarMedicamento', index: number): void;
   (e: 'buscarFarmacias', medicamento: string): void;
   (e: 'enviarReceta'): void;
   (e: 'exportarPDF'): void;
 }>();
 
+// ========== ESTADO LOCAL ==========
 const sintomaTemporal = ref('');
-const medicamentoTemporal = ref('');
+const medicamentoSeleccionado = ref('');
+const medicamentoDosisNumero = ref<number | null>(null);
+const medicamentoFrecuencia = ref('');
 const cajaDiagnostico = ref<HTMLElement | null>(null);
 const modoEdicion = ref(false);
 
-const habilitarEdicion = () => {
-  modoEdicion.value = true;
-  nextTick(() => cajaDiagnostico.value?.focus());
+// ========== COMPUTED ==========
+const medicamentosOpciones = computed(() => {
+  return props.listaMedicamentos.map((item: string) => {
+    const match = item.match(/^(.+?)\s*\(/);
+    const nombre = match ? match[1].trim() : item;
+    return { nombre, valor: item };
+  });
+});
+
+const dosisConUnidad = computed(() => {
+  return medicamentoDosisNumero.value !== null && medicamentoDosisNumero.value > 0
+    ? `${medicamentoDosisNumero.value}mg`
+    : '';
+});
+
+// ========== FUNCIONES AUXILIARES ==========
+const extraerNombre = (valorCompleto: string): string => {
+  const match = valorCompleto.match(/^(.+?)\s*\(/);
+  return match ? match[1].trim() : valorCompleto;
 };
 
-const guardarDiagnostico = (e: Event) => {
-  modoEdicion.value = false;
-  const nuevoDiagnostico = (e.target as HTMLElement).innerText.trim();
-  emit('update:diagnostico', nuevoDiagnostico);
-};
-
+// ========== SÍNTOMAS ==========
 const agregarSintoma = () => {
   if (!sintomaTemporal.value) return;
   emit('agregarSintoma', sintomaTemporal.value);
@@ -118,14 +145,10 @@ const eliminarSintoma = (index: number) => {
   emit('eliminarSintoma', index);
 };
 
-const agregarMedicamento = () => {
-  if (!medicamentoTemporal.value) return;
-  emit('agregarMedicamento', medicamentoTemporal.value);
-  medicamentoTemporal.value = '';
-};
-
-const eliminarMedicamento = (index: number) => {
-  emit('eliminarMedicamento', index);
+// ========== DIAGNÓSTICO ==========
+const habilitarEdicion = () => {
+  modoEdicion.value = true;
+  nextTick(() => cajaDiagnostico.value?.focus());
 };
 
 const guardarDiagnosticoManual = () => {
@@ -136,8 +159,32 @@ const guardarDiagnosticoManual = () => {
   }
 };
 
-const buscar = (med: string) => {
-  emit('buscarFarmacias', med);
+const guardarDiagnostico = (e: Event) => {
+  modoEdicion.value = false;
+  const nuevo = (e.target as HTMLElement).innerText.trim();
+  emit('update:diagnostico', nuevo);
+};
+
+// ========== MEDICAMENTOS ==========
+const agregarMedicamento = () => {
+  if (!medicamentoSeleccionado.value || !medicamentoDosisNumero.value || !medicamentoFrecuencia.value) {
+    alert('Completa todos los campos del medicamento.');
+    return;
+  }
+  const nombreLimpio = extraerNombre(medicamentoSeleccionado.value);
+  emit('agregarMedicamento', {
+    nombre: nombreLimpio,
+    dosis: dosisConUnidad.value,  // <-- Usamos el computed que agrega "mg"
+    frecuencia: medicamentoFrecuencia.value
+  });
+  // Limpiar campos
+  medicamentoSeleccionado.value = '';
+  medicamentoDosisNumero.value = null;
+  medicamentoFrecuencia.value = '';
+};
+
+const buscar = (nombre: string) => {
+  emit('buscarFarmacias', nombre);
 };
 </script>
 
@@ -208,6 +255,16 @@ const buscar = (med: string) => {
   display: flex;
   gap: 10px;
   margin-bottom: 8px;
+}
+.controles-agregar-med {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.controles-agregar-med .campo {
+  flex: 1;
+  min-width: 80px;
 }
 .btn-add {
   background: var(--color-nav);
