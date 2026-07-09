@@ -258,45 +258,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.cita-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-.paneles-medicos {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 25px;
-  width: 100%;
-  margin-top: 0;
-}
-.mensaje-sin-seleccion {
-  text-align: center;
-  padding: 40px 20px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-.mensaje-sin-seleccion i {
-  font-size: 3rem;
-  color: var(--color-accent);
-  margin-bottom: 15px;
-}
-.mensaje-sin-seleccion p {
-  font-size: 1.1rem;
-  color: var(--color-text);
-}
-@media (max-width: 991px) {
-  .paneles-medicos {
-    flex-direction: column;
-    align-items: center;
-  }
-}
-@media (max-width: 768px) {
-  .cita-container {
-    padding: 0 10px;
-  }
-}
 </style>
