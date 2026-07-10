@@ -11,7 +11,7 @@
     "alergias": "Ninguna",
     "peso": 78,
     "diagnostico": "Hipertensión arterial controlada con tratamiento farmacológico. Presenta episodios ocasionales de mareo y cefalea leve.",
-    "medicamentos": "• Losartán (50mg diario) • Amlodipino (5mg diario) • Hidroclorotiazida (25mg diario)"
+    "medicamentos": "• Losartán  • Amlodipino  • Hidroclorotiazida "
   },
   {
     "nombre": "María Fernández",
@@ -25,7 +25,7 @@
     "alergias": "Ninguna",
     "peso": 65,
     "diagnostico": "Insuficiencia cardíaca leve en seguimiento médico. Mantiene buena respuesta al tratamiento y actividad física moderada.",
-    "medicamentos": "• Bisoprolol (5mg diario) • Furosemida (40mg diario) • Espironolactona (25mg diario)"
+    "medicamentos": "• Bisoprolol  • Furosemida  • Espironolactona "
   },
   {
     "nombre": "Luis Torres",
@@ -39,7 +39,7 @@
     "alergias": "Penicilina",
     "peso": 82,
     "diagnostico": "Fibrilación auricular crónica e hipertensión. Requiere estricto control de la frecuencia cardíaca y esquema de anticoagulación.",
-    "medicamentos": "• Metoprolol (50mg cada 12h) • Apixabán (5mg cada 12h) • Atorvastatina (20mg noche)"
+    "medicamentos": "• Metoprolol  • Apixabán  • Atorvastatina "
   },
   {
     "nombre": "Elena Anchundia",
@@ -53,7 +53,7 @@
     "alergias": "Ninguna",
     "peso": 70,
     "diagnostico": "Cardiopatía hipertensiva en estadio inicial. Control adecuado de cifras tensionales con leves picos durante actividad física.",
-    "medicamentos": "• Losartán (50mg diario) • Atorvastatina (20mg noche)"
+    "medicamentos": "• Losartán  • Atorvastatina "
   },
   {
     "nombre": "Jorge Barberán",
@@ -67,7 +67,7 @@
     "alergias": "Aspirina",
     "peso": 75,
     "diagnostico": "Fibrilación auricular paroxística controlada. En tratamiento preventivo para evitar eventos tromboembólicos.",
-    "medicamentos": "• Apixabán (5mg cada 12h) • Bisoprolol (5mg diario)"
+    "medicamentos": "• Apixabán  • Bisoprolol "
   },
   {
     "nombre": "Carmen Lucas",
@@ -81,7 +81,7 @@
     "alergias": "Ninguna",
     "peso": 68,
     "diagnostico": "Angina de pecho estable bajo manejo médico continuo. Paciente refiere buena tolerancia al esfuerzo moderado actual.",
-    "medicamentos": "• Aspirina (100mg) • Carvedilol (6.25mg)"
+    "medicamentos": "• Aspirina  • Carvedilol "
   },
   {
     "nombre": "Pedro Cevallos",
@@ -95,6 +95,6 @@
     "alergias": "Ninguna",
     "peso": 80,
     "diagnostico": "Insuficiencia cardíaca congestiva compensada. Se mantiene vigilancia periódica sobre la retención de líquidos periférica.",
-    "medicamentos": "• Furosemida (40mg diario) • Enalapril (10mg) • Espironolactona (25mg diario)"
+    "medicamentos": "• Furosemida  • Enalapril  • Espironolactona "
   }
 ]

@@ -65,22 +65,60 @@ const farmaciasEncontradas = ref<any[]>([]);
 // ========== COMPUTADOS ==========
 const pacienteActual = computed(() => obtenerPaciente(correoSeleccionado.value));
 
-// ========== GUARDAR CAMBIOS ==========
+// ========== GUARDAR CAMBIOS (CON LOGS - PASO 2) ==========
 const guardarCambiosPaciente = () => {
-  if (!correoSeleccionado.value) return;
-  actualizarPaciente(correoSeleccionado.value, {
+  console.log('🔄 guardarCambiosPaciente ejecutado');
+  if (!correoSeleccionado.value) {
+    console.warn('⚠️ No hay paciente seleccionado');
+    return;
+  }
+  
+  const datos = {
     diagnostico: diagnosticoActual.value,
-    sintomasActivos: [...sintomasActivos.value],
+    sintomas: [...sintomasActivos.value],
     medicamentos: medicamentosRecetados.value
       .map(m => `${m.nombre} (${m.dosis} – ${m.frecuencia})`)
       .join(' • ')
-  });
+  };
+  
+  console.log('📤 Datos a guardar:', datos);
+  actualizarPaciente(correoSeleccionado.value, datos);
+};
+
+const guardarEstadoLocal = () => {
+  if (!pacienteActual.value) return;
+  const cedula = pacienteActual.value.cedula;
+  const estado = {
+    diagnostico: diagnosticoActual.value,
+    sintomas: [...sintomasActivos.value],
+    medicamentos: medicamentosRecetados.value
+  };
+  localStorage.setItem(`estado_paciente_${cedula}`, JSON.stringify(estado));
+  console.log('💾 Estado guardado en localStorage para:', pacienteActual.value.nombre);
+};
+
+const cargarEstadoLocal = (cedula: string) => {
+  const data = localStorage.getItem(`estado_paciente_${cedula}`);
+  if (data) {
+    try {
+      const estado = JSON.parse(data);
+      diagnosticoActual.value = estado.diagnostico || '';
+      sintomasActivos.value = estado.sintomas || [];
+      medicamentosRecetados.value = estado.medicamentos || [];
+      console.log('📂 Estado cargado desde localStorage para:', cedula);
+      return true;
+    } catch (error) {
+      console.error('❌ Error al parsear estado local:', error);
+      return false;
+    }
+  }
+  return false;
 };
 
 // ========== DIAGNÓSTICO ==========
 const actualizarDiagnostico = (nuevoDiagnostico: string) => {
   diagnosticoActual.value = nuevoDiagnostico;
-  guardarCambiosPaciente();
+  guardarEstadoLocal();
 };
 
 // ========== SÍNTOMAS ==========
@@ -90,13 +128,13 @@ const agregarSintoma = (sintoma: string) => {
     return;
   }
   sintomasActivos.value.push(sintoma);
-  guardarCambiosPaciente();
+  guardarEstadoLocal();
 };
 
 const eliminarSintoma = (index: number) => {
   if (confirm(`¿Eliminar síntoma "${sintomasActivos.value[index]}"?`)) {
     sintomasActivos.value.splice(index, 1);
-    guardarCambiosPaciente();
+    guardarEstadoLocal();
   }
 };
 
@@ -110,14 +148,14 @@ const agregarMedicamento = (medicamento: { nombre: string; dosis: string; frecue
     return;
   }
   medicamentosRecetados.value.push(medicamento);
-  guardarCambiosPaciente();
+  guardarEstadoLocal();
 };
 
 const eliminarMedicamento = (index: number) => {
   const medicamento = medicamentosRecetados.value[index];
   if (confirm(`¿Eliminar medicamento "${medicamento.nombre}"?`)) {
     medicamentosRecetados.value.splice(index, 1);
-    guardarCambiosPaciente();
+    guardarEstadoLocal();
     if (modalVisible.value && medicamentoBuscado.value === medicamento.nombre) {
       modalVisible.value = false;
     }
@@ -132,20 +170,38 @@ const buscarFarmacias = (nombreMedicamento: string) => {
 };
 
 // ========== RECETA ==========
-const enviarReceta = () => {
+const enviarReceta = async () => {
   if (!pacienteActual.value) {
     alert('Selecciona un paciente primero.');
     return;
   }
-  guardarReceta({
-    paciente: pacienteActual.value.correo,
-    nombrePaciente: pacienteActual.value.nombre,
-    sintomas: [...sintomasActivos.value],
-    diagnostico: diagnosticoActual.value,
-    medicamentos: [...medicamentosRecetados.value],
-    doctor: localStorage.getItem('nombreUsuario') || 'Doctor'
-  });
-  alert('✅ Receta enviada y guardada correctamente.');
+
+  const p = pacienteActual.value;
+
+  // Guardar estado local antes de enviar (para que persista al recargar)
+  guardarEstadoLocal();
+
+  // Datos para Supabase (coinciden con la tabla)
+  const datos = {
+    paciente: p.nombre,                    // nombre del paciente
+    fecha: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    diagnostico: diagnosticoActual.value || 'Sin diagnóstico',
+    medicamentos: medicamentosRecetados.value.map(med => ({
+      nombre: `${med.nombre} ${med.dosis}`, // Ej: "Losartán 50mg"
+      cantidad: 1
+    }))
+  };
+
+  console.log('📤 Receta a enviar:', datos);
+
+  const result = await guardarReceta(datos);
+
+  if (result.success) {
+    alert('✅ Receta enviada y guardada en la nube.');
+  } else {
+    console.error('❌ Error al guardar en Supabase:', result.error);
+    alert('⚠️ Receta guardada localmente, pero hubo error en la nube.');
+  }
 };
 
 // ========== PDF ==========
@@ -224,38 +280,26 @@ watch(correoSeleccionado, (nuevo) => {
     return;
   }
   
-  diagnosticoActual.value = p.diagnostico || '';
-  sintomasActivos.value = p.sintomasActivos || [];
+  // Intentar cargar el estado desde localStorage usando la función
+  const cargado = cargarEstadoLocal(p.cedula);
   
-  // Intentar cargar medicamentos
-  try {
-    const medicamentosStr = p.medicamentos || '';
-    if (typeof medicamentosStr === 'string' && medicamentosStr.trim()) {
-      const items = medicamentosStr.split('•').filter(s => s.trim());
-      medicamentosRecetados.value = items.map(item => {
-        const trimmed = item.trim();
-        const match = trimmed.match(/^(.+?)\s*\((.+?)\s*–\s*(.+?)\)$/);
-        if (match) {
-          return { nombre: match[1].trim(), dosis: match[2].trim(), frecuencia: match[3].trim() };
-        }
-        return { nombre: trimmed, dosis: '', frecuencia: '' };
-      }).filter(m => m.nombre && m.nombre.trim());
-    } else {
-      medicamentosRecetados.value = [];
-    }
-  } catch (error) {
-    console.error('Error cargando medicamentos:', error);
+  if (!cargado) {
+    // Si no hay estado guardado, inicializar vacío
+    diagnosticoActual.value = '';
+    sintomasActivos.value = [];
     medicamentosRecetados.value = [];
+    console.log('🆕 No hay estado previo para el paciente, iniciando vacío');
   }
 });
 
 // ========== INICIALIZACIÓN ==========
-onMounted(() => {
+onMounted(async () => {
   listaSintomas.value = sintomasData;
   listaMedicamentos.value = medicamentosData;
-  cargarPacientes();
+  await cargarPacientes();
 });
 </script>
 
 <style scoped>
+/* Los estilos ahora están en cita-componentes.css */
 </style>
