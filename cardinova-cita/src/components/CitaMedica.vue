@@ -178,21 +178,20 @@ const enviarReceta = async () => {
 
   const p = pacienteActual.value;
 
-  // Guardar estado local antes de enviar (para que persista al recargar)
+  // Guardar estado local antes de enviar
   guardarEstadoLocal();
 
-  // Datos para Supabase (coinciden con la tabla)
   const datos = {
-    paciente: p.nombre,                    // nombre del paciente
-    fecha: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    paciente: p.nombre,
+    fecha: new Date().toISOString().split('T')[0],
     diagnostico: diagnosticoActual.value || 'Sin diagnóstico',
     medicamentos: medicamentosRecetados.value.map(med => ({
-      nombre: `${med.nombre} ${med.dosis}`, // Ej: "Losartán 50mg"
-      cantidad: 1
+      nombre: med.nombre,  // Solo el nombre del medicamento
+      cantidad: 1          // Cantidad fija (puedes ajustar si lo necesitas)
     }))
   };
 
-  console.log('📤 Receta a enviar:', datos);
+  console.log('📤 Receta a enviar (solo nombres):', datos);
 
   const result = await guardarReceta(datos);
 

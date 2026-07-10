@@ -1,38 +1,47 @@
 import { guardarRecetaSupabase, obtenerRecetasSupabase, obtenerRecetasPorPaciente } from '../services/recetasService';
 
 export function useRecetas() {
-  const guardarReceta = async (datos: {
-    paciente: string;
-    fecha: string;
-    diagnostico: string;
-    medicamentos: { nombre: string; cantidad: number }[];
-  }) => {
-    // Guardar localmente (backup)
-    try {
-      const historial = JSON.parse(localStorage.getItem('historialRecetas') || '[]');
-      historial.push({
-        paciente: datos.paciente,
-        fecha: datos.fecha,
-        diagnostico: datos.diagnostico,
-        medicamentos: datos.medicamentos
-      });
-      localStorage.setItem('historialRecetas', JSON.stringify(historial));
-    } catch (error) {
-      console.warn('⚠️ Error guardando localmente:', error);
-    }
+    // ============================================
+    // GUARDAR RECETA (LOCAL + SUPABASE)
+    // ============================================
+    const guardarReceta = async (datos: {
+        paciente: string;
+        fecha: string;
+        diagnostico: string;
+        medicamentos: { nombre: string; cantidad?: number }[];
+    }) => {
+        const medicamentosParaDB = datos.medicamentos.map(med => ({
+            nombre: med.nombre,
+            cantidad: med.cantidad || 1
+        }));
 
-    // Guardar en Supabase
-    const result = await guardarRecetaSupabase({
-      paciente: datos.paciente,
-      fecha: datos.fecha,
-      diagnostico: datos.diagnostico,
-      medicamentos: datos.medicamentos
-    });
+        // Guardar localmente (backup)
+        try {
+            const historial = JSON.parse(localStorage.getItem('historialRecetas') || '[]');
+            historial.push({
+                paciente: datos.paciente,
+                fecha: datos.fecha,
+                diagnostico: datos.diagnostico,
+                medicamentos: medicamentosParaDB
+            });
+            localStorage.setItem('historialRecetas', JSON.stringify(historial));
+        } catch (error) {
+            console.warn('⚠️ Error guardando localmente:', error);
+        }
 
-    return result;
-  };
+        // Guardar en Supabase (ahora con UPDATE si existe)
+        const result = await guardarRecetaSupabase({
+            paciente: datos.paciente,
+            fecha: datos.fecha,
+            diagnostico: datos.diagnostico,
+            medicamentos: medicamentosParaDB
+        });
 
-  // ============================================
+        return result;
+    };
+
+
+    // ============================================
     // OBTENER TODAS LAS RECETAS (desde Supabase)
     // ============================================
     const obtenerRecetas = async () => {
@@ -60,7 +69,7 @@ export function useRecetas() {
     // ============================================
     return {
         guardarReceta,
-        obtenerRecetas,           // ← Esta es la que necesitas
+        obtenerRecetas,
         obtenerRecetasDePaciente,
         obtenerRecetasLocales
     };
