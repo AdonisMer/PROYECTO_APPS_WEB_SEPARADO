@@ -1,74 +1,52 @@
 import { supabase } from '../supabase/client';
 
-// ============================================
-// OBTENER TODOS LOS PACIENTES
-// ============================================
 export const obtenerPacientesSupabase = async () => {
     try {
-        const { data, error } = await supabase
-            .from('pacientes')
-            .select('*')
-            .order('nombre');
+        // 1. Obtener todos los usuarios con rol = 'paciente'
+        const { data: usuarios, error } = await supabase
+            .from('usuarios')
+            .select('cedula, nombre, apellido, correo, rol, id_usuario')  // ← Incluir id_usuario
+            .eq('rol', 'paciente');
 
         if (error) throw error;
-        return { success: true, data };
+
+        // 2. Obtener teléfonos de la tabla pacientes
+        const { data: telefonos, error: errorTelefono } = await supabase
+            .from('pacientes')
+            .select('id_usuario, telefono');
+
+        if (errorTelefono) console.warn('⚠️ No se pudo obtener teléfonos:', errorTelefono);
+
+        // 3. Mapear teléfonos por id_usuario
+        const telefonoMap: Record<string, string> = {};
+        if (telefonos) {
+            telefonos.forEach((item: any) => {
+                telefonoMap[item.id_usuario] = item.telefono || '';
+            });
+        }
+
+        // 4. FILTRAR Y FORMATEAR pacientes (solo los que tienen cedula y nombre)
+        const pacientesFormateados = usuarios
+            .filter((u: any) => u.cedula && u.cedula.length > 5 && u.nombre) // ← FILTRO AQUÍ
+            .map((usuario: any) => ({
+                cedula: usuario.cedula,
+                nombre: `${usuario.nombre} ${usuario.apellido}`,
+                correo: usuario.correo,
+                telefono: telefonoMap[usuario.id_usuario] || '',
+                // Datos clínicos locales (se completan desde localStorage)
+                edad: null,
+                tipo_sangre: null,
+                alergias: 'Ninguna',
+                peso: null,
+                diagnostico: '',
+                sintomas: [],
+                medicamentos: ''
+            }));
+
+        console.log('✅ Pacientes cargados (solo pacientes):', pacientesFormateados.length);
+        return { success: true, data: pacientesFormateados };
     } catch (error) {
         console.error('❌ Error al obtener pacientes:', error);
         return { success: false, error, data: [] };
-    }
-};
-
-// ============================================
-// ACTUALIZAR UN PACIENTE POR CÉDULA
-// ============================================
-export const actualizarPacienteSupabase = async (cedula: string, datos: any) => {
-    try {
-        const { data, error } = await supabase
-            .from('pacientes')
-            .update(datos)
-            .eq('cedula', cedula)
-            .select();
-
-        if (error) throw error;
-        return { success: true, data };
-    } catch (error) {
-        console.error('❌ Error al actualizar paciente:', error);
-        return { success: false, error };
-    }
-};
-
-// ============================================
-// CREAR UN NUEVO PACIENTE
-// ============================================
-export const crearPacienteSupabase = async (paciente: any) => {
-    try {
-        const { data, error } = await supabase
-            .from('pacientes')
-            .insert([paciente])
-            .select(); // Esto devuelve el registro insertado
-
-        if (error) throw error;
-        return { success: true, data: data || [] };
-    } catch (error) {
-        console.error('❌ Error al crear paciente:', error);
-        return { success: false, error, data: [] };
-    }
-};
-
-// ============================================
-// ELIMINAR PACIENTE (opcional, solo si lo usas)
-// ============================================
-export const eliminarPacienteSupabase = async (cedula: string) => {
-    try {
-        const { error } = await supabase
-            .from('pacientes')
-            .delete()
-            .eq('cedula', cedula);
-
-        if (error) throw error;
-        return { success: true };
-    } catch (error) {
-        console.error('❌ Error al eliminar paciente:', error);
-        return { success: false, error };
     }
 };

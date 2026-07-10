@@ -1,14 +1,98 @@
 [
   {
-    "nombre": "Dr. Carlos Rodríguez",
-    "correo": "carlos.rodriguez@cardinova.com",
-    "password": "doc_carlos123",
+    "nombre": "Dr. Roberto Jara",
+    "correo": "dr.jara@hospital.com",
+    "password": "Medico2026",
     "rol": "doctor"
   },
   {
-    "nombre": "Dra. María Gómez",
-    "correo": "maria.gomez@cardinova.com",
-    "password": "doc_maria123",
+    "nombre": "Dra. Ana López",
+    "correo": "dr.ana@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Luis Zambrano",
+    "correo": "dr.zambrano@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dra. Lucía Méndez",
+    "correo": "dr.mendez@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Jorge Andrade",
+    "correo": "dr.andrade@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Pablo Rios",
+    "correo": "dr.rios@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dra. Cecilia Paz",
+    "correo": "dr.paz@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dra. Sofia Mora",
+    "correo": "dr.sofia@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Juan Pérez",
+    "correo": "dr.perez@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dra. Elena Vaca",
+    "correo": "dr.vaca@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Ricardo Silva",
+    "correo": "dr.silva@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Fernando Ortiz",
+    "correo": "dr.ortiz@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Carlos Rodríguez",
+    "correo": "dr.rodriguez@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Vicente León",
+    "correo": "dr.leon@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dra. Carmen Roldán",
+    "correo": "dr.roldan@hospital.com",
+    "password": "Medico2026",
+    "rol": "doctor"
+  },
+  {
+    "nombre": "Dr. Esteban Ruiz",
+    "correo": "dr.ruiz@hospital.com",
+    "password": "Medico2026",
     "rol": "doctor"
   }
 ]
