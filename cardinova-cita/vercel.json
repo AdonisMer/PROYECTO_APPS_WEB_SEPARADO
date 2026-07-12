@@ -1,17 +1,17 @@
 {
   "builds": [
     {
-      "src": "package.json",
+      "src": "cardinova-cita/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "cardinova-cita/dist"
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/cardinova-cita/index.html"
     }
   ]
 }
